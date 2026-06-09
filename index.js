@@ -1,7 +1,7 @@
-const { default: makeWASocket, useMultiFileAuthState, DisconnectReason } = require('@whiskeysockets/baileys');
+const { default: makeWASocket, useMultiFileAuthState, DisconnectReason, fetchLatestBaileysVersion } = require('@whiskeysockets/baileys');
 const qrcode = require('qrcode-terminal');
 const express = require('express');
-const fs = require('fs'); // Adicionado para gerenciar pastas
+const fs = require('fs');
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -10,14 +10,17 @@ app.get('/', (req, res) => res.send('Bot Logística Zema (Baileys) Online!'));
 app.listen(port, () => console.log(`Servidor rodando na porta ${port}`));
 
 async function connectToWhatsApp() {
+    // Busca a versão mais recente exigida pelo WhatsApp hoje
+    const { version, isLatest } = await fetchLatestBaileysVersion();
+    console.log(`Usando a versão do WhatsApp Web v${version.join('.')} (Mais recente: ${isLatest})`);
+
     const { state, saveCreds } = await useMultiFileAuthState('auth_info_baileys');
 
     const sock = makeWASocket({
+        version, // Injeta a versão correta para evitar o erro 405
         auth: state,
         printQRInTerminal: false,
-        // 1. O DISFARCE: Finge ser um Mac rodando Chrome para evitar bloqueios da Meta
         browser: ['Mac OS', 'Chrome', '121.0.0'], 
-        // 2. ECONOMIA DE MEMÓRIA: Não baixa o histórico antigo de mensagens
         syncFullHistory: false 
     });
 
@@ -37,14 +40,12 @@ async function connectToWhatsApp() {
             
             console.log('Conexão caiu. Status:', statusCode);
             
-            // Se foi desconectado forçadamente, limpa a sessão corrompida para gerar um QR Code novo
-            if (!shouldReconnect) {
-                console.log('Sessão inválida. Limpando dados antigos...');
+            if (!shouldReconnect || statusCode === 405) {
+                console.log('Sessão inválida ou versão rejeitada. Limpando dados antigos...');
                 fs.rmSync('./auth_info_baileys', { recursive: true, force: true });
             }
 
             if (shouldReconnect) {
-                // Pequeno atraso para não causar loop infinito instantâneo
                 setTimeout(connectToWhatsApp, 2000);
             } else {
                 connectToWhatsApp();
