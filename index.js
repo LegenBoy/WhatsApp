@@ -18,46 +18,59 @@ async function connectToWhatsApp() {
         auth: state,
         printQRInTerminal: false,
         browser: ['Mac OS', 'Chrome', '121.0.0'], 
-        syncFullHistory: false 
+        syncFullHistory: false, // EVITA TIMEOUT DE HISTÓRICO
+        markOnlineOnConnect: false
     });
 
     sock.ev.on('creds.update', saveCreds);
 
     sock.ev.on('connection.update', (update) => {
         const { connection, lastDisconnect, qr } = update;
+        
         if (qr) {
             console.log('\n--- LEIA O QR CODE ---');
             qrcode.generate(qr, { small: true });
         }
+
         if (connection === 'close') {
             const shouldReconnect = lastDisconnect.error?.output?.statusCode !== DisconnectReason.loggedOut;
             if (shouldReconnect) setTimeout(connectToWhatsApp, 2000);
             else connectToWhatsApp();
         } else if (connection === 'open') {
-            console.log('✅ Bot conectado!');
+            console.log('✅ Bot Conectado com sucesso!');
         }
     });
 
+    // Filtro de mensagens garantido dentro do escopo do "sock"
     sock.ev.on('messages.upsert', async (m) => {
         const msg = m.messages[0];
-        if (!msg.message || msg.key.fromMe || msg.key.remoteJid === 'status@broadcast') return;
+        
+        if (!msg.message || msg.key.remoteJid === 'status@broadcast') return;
 
-        // --- LÊ O NÚMERO DO PAINEL DO RENDER ---
+        // IDs configurados
         const ID_DO_GRUPO = '120363425613612495@g.us'; 
         const MEU_NUMERO = process.env.MEU_NUMERO_WHATSAPP; 
 
         const chatDeOrigem = msg.key.remoteJid;
         let quemEnviou = msg.key.participant || msg.key.remoteJid;
-        if (msg.key.fromMe) quemEnviou = sock.user.id.split(':')[0] + '@s.whatsapp.net';
+        
+        // Corrige se a mensagem foi enviada pelo próprio bot
+        if (msg.key.fromMe) {
+            quemEnviou = sock.user.id.split(':')[0] + '@s.whatsapp.net';
+        }
 
-        // Filtra grupo e remetente
+        // Filtro Blindado
         if (chatDeOrigem !== ID_DO_GRUPO || quemEnviou !== MEU_NUMERO) return;
 
         const texto = msg.message.conversation || msg.message.extendedTextMessage?.text || "";
 
         if (texto.toLowerCase().includes('lacrado')) {
-            console.log('\n--- COMANDO RECEBIDO ---');
-            await sock.sendMessage(chatDeOrigem, { text: '✅ Atualizando status do baú...' }, { quoted: msg });
+            console.log('\n--- COMANDO AUTORIZADO RECEBIDO ---');
+            try {
+                await sock.sendMessage(chatDeOrigem, { text: '✅ Processando seu lacrado no sistema Zema...' }, { quoted: msg });
+            } catch (err) {
+                console.error('Erro:', err);
+            }
         }
     });
 }
