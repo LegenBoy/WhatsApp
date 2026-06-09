@@ -1,5 +1,14 @@
 const wppconnect = require('@wppconnect-team/wppconnect');
+const express = require('express');
 
+// Configuração obrigatória para o Render manter o bot online
+const app = express();
+const port = process.env.PORT || 3000;
+
+app.get('/', (req, res) => res.send('Bot Logistica Zema Online!'));
+app.listen(port, () => console.log(`Servidor rodando na porta ${port}`));
+
+// Configuração do WhatsApp
 wppconnect.create({ 
     session: 'logistica-zema',
     autoClose: false,
@@ -8,19 +17,16 @@ wppconnect.create({
 .then((client) => {
     console.log('Bot conectado e ouvindo!');
     
-    // Voltamos para o onMessage para evitar eventos invisíveis do sistema
+    // Barreira contra o "Loop" de eventos do sistema
     client.onMessage(async (message) => {
-        // 1. A BARREIRA: Ignora nulos, status, e qualquer coisa que não seja texto ('chat')
         if (!message || message.from === 'status@broadcast' || message.isStatus || message.type !== 'chat') {
-            return; // Interrompe a execução aqui mesmo
+            return; 
         }
 
-        // 2. Se passou da barreira, é uma mensagem real enviada por alguém. Agora sim logamos.
         console.log('--- MENSAGEM DE TEXTO RECEBIDA ---');
         console.log('De:', message.from);
         console.log('Texto:', message.body);
         
-        // 3. Verifica se contém "lacrado"
         if (message.body && message.body.toLowerCase().includes('lacrado')) {
             console.log('✅ PALAVRA CHAVE ENCONTRADA!');
             
