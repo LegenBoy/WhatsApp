@@ -1,21 +1,24 @@
 const { default: makeWASocket, useMultiFileAuthState, DisconnectReason } = require('@whiskeysockets/baileys');
 const qrcode = require('qrcode-terminal');
 const express = require('express');
+const fs = require('fs'); // Adicionado para gerenciar pastas
 
-// Configuração do Servidor Express (Para o Render não derrubar o bot)
 const app = express();
 const port = process.env.PORT || 3000;
 
 app.get('/', (req, res) => res.send('Bot Logística Zema (Baileys) Online!'));
 app.listen(port, () => console.log(`Servidor rodando na porta ${port}`));
 
-// Função principal do Bot
 async function connectToWhatsApp() {
     const { state, saveCreds } = await useMultiFileAuthState('auth_info_baileys');
 
     const sock = makeWASocket({
         auth: state,
-        printQRInTerminal: false
+        printQRInTerminal: false,
+        // 1. O DISFARCE: Finge ser um Mac rodando Chrome para evitar bloqueios da Meta
+        browser: ['Mac OS', 'Chrome', '121.0.0'], 
+        // 2. ECONOMIA DE MEMÓRIA: Não baixa o histórico antigo de mensagens
+        syncFullHistory: false 
     });
 
     sock.ev.on('creds.update', saveCreds);
@@ -29,9 +32,21 @@ async function connectToWhatsApp() {
         }
 
         if (connection === 'close') {
-            const shouldReconnect = lastDisconnect.error?.output?.statusCode !== DisconnectReason.loggedOut;
-            console.log('Conexão caiu. Reconectando:', shouldReconnect);
+            const statusCode = lastDisconnect.error?.output?.statusCode;
+            const shouldReconnect = statusCode !== DisconnectReason.loggedOut;
+            
+            console.log('Conexão caiu. Status:', statusCode);
+            
+            // Se foi desconectado forçadamente, limpa a sessão corrompida para gerar um QR Code novo
+            if (!shouldReconnect) {
+                console.log('Sessão inválida. Limpando dados antigos...');
+                fs.rmSync('./auth_info_baileys', { recursive: true, force: true });
+            }
+
             if (shouldReconnect) {
+                // Pequeno atraso para não causar loop infinito instantâneo
+                setTimeout(connectToWhatsApp, 2000);
+            } else {
                 connectToWhatsApp();
             }
         } else if (connection === 'open') {
