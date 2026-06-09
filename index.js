@@ -11,12 +11,10 @@ wppconnect.create({
     session: 'logistica-zema',
     autoClose: false,
     puppeteerOptions: {
-        // Usa a variável de ambiente que configuramos no Render ou o padrão do Linux
-        executablePath: process.env.WPP_EXECUTABLE_PATH || '/usr/bin/google-chrome',
         args: [
             '--no-sandbox', 
             '--disable-setuid-sandbox',
-            '--disable-dev-shm-usage', // Impede travamento por falta de memória RAM
+            '--disable-dev-shm-usage',
             '--disable-gpu'
         ]
     }
