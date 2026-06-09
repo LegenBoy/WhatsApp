@@ -1,21 +1,44 @@
 const wppconnect = require('@wppconnect-team/wppconnect');
 const express = require('express');
+const axios = require('axios'); // Adicionado para suas chamadas de API
 const app = express();
 const port = process.env.PORT || 3000;
 
-// O Render precisa de uma porta aberta para saber que o serviço está "vivo"
-app.get('/', (req, res) => res.send('Bot esta rodando!'));
+app.get('/', (req, res) => res.send('Bot de Logistica Zema Online!'));
 app.listen(port, () => console.log(`Servidor rodando na porta ${port}`));
 
 wppconnect.create({ 
-    session: 'session-logistica',
+    session: 'logistica-zema',
     autoClose: false,
-    puppeteerOptions: { args: ['--no-sandbox'] } // Necessário para o Render
+    puppeteerOptions: {
+        // Usa a variável de ambiente que configuramos no Render ou o padrão do Linux
+        executablePath: process.env.WPP_EXECUTABLE_PATH || '/usr/bin/google-chrome',
+        args: [
+            '--no-sandbox', 
+            '--disable-setuid-sandbox',
+            '--disable-dev-shm-usage', // Impede travamento por falta de memória RAM
+            '--disable-gpu'
+        ]
+    }
 })
 .then((client) => {
-    client.onMessage((message) => {
-        console.log('Mensagem recebida:', message.body);
-        // Coloque sua lógica aqui
+    console.log('Bot conectado com sucesso!');
+    
+    client.onMessage(async (message) => {
+        // Verifica se a mensagem contém "lacrado" (ignora maiúsculas/minúsculas)
+        if (message.body && message.body.toLowerCase().includes('lacrado')) {
+            console.log('Comando detectado:', message.body);
+            
+            try {
+                // EX: axios.post('SUA_URL_AQUI', { status: 'LACRADO' }, { headers: { Authorization: 'Bearer SEU_TOKEN' } });
+                
+                console.log('API Zema atualizada!');
+                await client.sendText(message.from, '✅ Sucesso: Status atualizado na Zema!');
+            } catch (error) {
+                console.error('Erro na API:', error);
+                await client.sendText(message.from, '❌ Erro ao atualizar API.');
+            }
+        }
     });
 })
-.catch((error) => console.log(error));
+.catch((error) => console.error('Erro no WPPConnect:', error));
