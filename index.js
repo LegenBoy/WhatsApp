@@ -12,6 +12,7 @@ app.listen(port, () => console.log(`Servidor rodando na porta ${port}`));
 wppconnect.create({ 
     session: 'logistica-zema',
     autoClose: false,
+    authTimeout: 0, // <--- ADICIONE ESTA LINHA (0 significa tempo infinito)
     puppeteerOptions: { args: ['--no-sandbox', '--disable-setuid-sandbox'] }
 })
 .then((client) => {
