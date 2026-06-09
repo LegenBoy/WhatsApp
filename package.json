@@ -1,15 +1,14 @@
 {
-  "name": "bot-whatsapp",
+  "name": "bot-logistica-zema",
   "version": "1.0.0",
   "main": "index.js",
   "dependencies": {
-    "@wppconnect-team/wppconnect": "latest",
-    "axios": "latest",
-    "express": "latest",
-    "puppeteer": "22.10.0"
+    "@whiskeysockets/baileys": "^6.7.5",
+    "axios": "^1.6.8",
+    "express": "^4.19.2",
+    "qrcode-terminal": "^0.12.0"
   },
   "scripts": {
-    "start": "node index.js",
-    "postinstall": "npx puppeteer browsers install chrome"
+    "start": "node index.js"
   }
 }
