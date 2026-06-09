@@ -5,9 +5,11 @@
   "dependencies": {
     "@wppconnect-team/wppconnect": "latest",
     "axios": "latest",
-    "express": "latest"
+    "express": "latest",
+    "puppeteer": "latest"
   },
   "scripts": {
-    "start": "node index.js"
+    "start": "node index.js",
+    "postinstall": "npx puppeteer browsers install chrome"
   }
 }
