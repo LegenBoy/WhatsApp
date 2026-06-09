@@ -6,10 +6,10 @@
     "@wppconnect-team/wppconnect": "latest",
     "axios": "latest",
     "express": "latest",
-    "puppeteer": "latest"
+    "puppeteer": "22.10.0",
+    "puppeteer-core": "22.10.0"
   },
   "scripts": {
-    "start": "node index.js",
-    "postinstall": "npx puppeteer browsers install chrome"
+    "start": "node index.js"
   }
 }
