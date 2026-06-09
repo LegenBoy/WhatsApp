@@ -22,17 +22,15 @@ wppconnect.create({
 .then((client) => {
     console.log('Bot conectado com sucesso!');
     
-client.onMessage(async (message) => {
-    // ESTA LINHA VAI MOSTRAR NO LOG TUDO SOBRE A MENSAGEM
-    console.log('--- DEBUG DE MENSAGEM ---');
-    console.log('Conteúdo:', message.body);
-    console.log('Chat ID (Grupo):', message.chatId);
-    console.log('Sender ID (Quem enviou):', message.sender.id);
-    console.log('-------------------------');
-
-    // Mantenha o restante da sua lógica aqui...
-});
+    client.onMessage(async (message) => {
+        console.log('--- DEBUG DE MENSAGEM ---');
+        console.log('Conteúdo:', message.body);
+        console.log('Chat ID (Grupo):', message.chatId);
+        console.log('Sender ID (Quem enviou):', message.sender.id);
+        console.log('-------------------------');
+    });
+})
 .catch((error) => {
     console.error('Erro fatal ao iniciar WPPConnect:', error);
-    process.exit(1); // Força o Render a reiniciar o bot se ele não abrir o navegador
+    process.exit(1);
 });
