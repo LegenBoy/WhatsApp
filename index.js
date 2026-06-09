@@ -13,6 +13,7 @@ wppconnect.create({
     session: 'logistica-zema',
     autoClose: false,
     authTimeout: 0, // <--- ADICIONE ESTA LINHA (0 significa tempo infinito)
+    deviceName: 'Bot Logistica Zema',
     puppeteerOptions: { args: ['--no-sandbox', '--disable-setuid-sandbox'] }
 })
 .then((client) => {
